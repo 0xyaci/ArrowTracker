@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ArrowTracker</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+</head>
+<body>
+    <div class="bodyy">
+    <div class="container">
+        <h1>ArrowTracker</h1>
+        <div id="bitcoin-card" class="crypto-card">
+            <div class="crypto-header">
+                <div class="crypto-name">Bitcoin</div>
+                <div class="crypto-symbol">BTC</div>
+            </div>
+            <div class="loading">Loading...</div>
+        </div>
+
+        <div id="solana-card" class="crypto-card">
+            <div class="crypto-header">
+                <div class="crypto-name">Solana</div>
+                <div class="crypto-symbol">SOL</div>
+            </div>
+            <div class="loading">Loading...</div>
+        </div>
+
+        <button class="refresh-btn" onclick="fetchPrices()">Refresh Prices</button>
+        <div class="last-update" id="last-update"></div>
+    </div>
+    </div>
+    <footer><p class="signature">Made by <a href="https://github.com/0xyaci">0xyaci</a></p></footer>
+
+    <script>
+        async function fetchPrices() {
+            try {
+                const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,solana&vs_currencies=usd&include_24hr_change=true');
+                const data = await response.json();
+
+                updateCard('bitcoin-card', 'Bitcoin', 'BTC', data.bitcoin.usd, data.bitcoin.usd_24h_change);
+                updateCard('solana-card', 'Solana', 'SOL', data.solana.usd, data.solana.usd_24h_change);
+
+                updateLastUpdateTime();
+            } catch (error) {
+                document.getElementById('bitcoin-card').innerHTML = '<div class="error">Failed to load price data</div>';
+                document.getElementById('solana-card').innerHTML = '<div class="error">Failed to load price data</div>';
+                console.error('Error fetching prices:', error);
+            }
+        }
+
+        function updateCard(cardId, name, symbol, price, change) {
+            const card = document.getElementById(cardId);
+            const changeClass = change >= 0 ? 'positive' : 'negative';
+            const changeSymbol = change >= 0 ? '▲' : '▼';
+            
+            card.innerHTML = `
+                <div class="crypto-header">
+                    <div class="crypto-name">${name}</div>
+                    <div class="crypto-symbol">${symbol}</div>
+                </div>
+                <div class="price">$${price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                <div class="change ${changeClass}">
+                    ${changeSymbol} ${Math.abs(change).toFixed(2)}% (24h)
+                </div>
+            `;
+        }
+
+        function updateLastUpdateTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            document.getElementById('last-update').textContent = `Last updated: ${timeString}`;
+        }
+        
+        setInterval(fetchPrices, 30000);
+    </script>
+</body>
+</html>
